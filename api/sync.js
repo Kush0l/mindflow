@@ -10,7 +10,7 @@
 'use strict';
 
 const { initDb, query } = require('../lib/db');
-const { isValidUUID, setSecurityHeaders, isRateLimited, getAuthUser } = require('../../lib/security');
+const { isValidUUID, setSecurityHeaders, isRateLimited, getAuthUser } = require('../lib/security');
 
 module.exports = async (req, res) => {
   setSecurityHeaders(res);
