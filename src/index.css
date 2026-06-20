@@ -657,6 +657,50 @@ body.high-contrast .chat-bubble {
   75% { transform: rotate(10deg); }
 }
 
+/* Weather Animation Effects */
+.sun-effect-glow {
+  position: absolute;
+  top: -40px;
+  right: -40px;
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(234, 179, 8, 0.25) 0%, rgba(234, 179, 8, 0) 70%);
+  animation: sun-pulse 6s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.rain-effect-container {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.rain-drop {
+  position: absolute;
+  width: 1.5px;
+  height: 15px;
+  background: linear-gradient(180deg, transparent, rgba(6, 182, 212, 0.5));
+  animation: rain-fall 1.5s infinite linear;
+  top: -20px;
+}
+
+@keyframes sun-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.4; }
+  50% { transform: scale(1.4); opacity: 0.8; }
+}
+
+@keyframes rain-fall {
+  0% { transform: translateY(-20px); opacity: 0; }
+  20% { opacity: 0.8; }
+  80% { opacity: 0.8; }
+  100% { transform: translateY(220px); opacity: 0; }
+}
+
 /* Disable Animations under Reduced Motion */
 @media (prefers-reduced-motion: reduce) {
   * {

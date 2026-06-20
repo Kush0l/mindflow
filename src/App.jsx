@@ -153,6 +153,19 @@ export default function App() {
     triggerSync();
   };
 
+  const handleQuickLogMood = (score, emotion) => {
+    const newLog = {
+      journal_text: `Quick check-in: Feeling ${emotion}`,
+      mood_score: score,
+      dominant_emotion: emotion,
+      distortions: [],
+      stressors: ['Quick Check-in'],
+      response_text: `You logged feeling ${emotion}. Remember to take a deep breath and keep going!`,
+      created_at: new Date().toISOString(),
+    };
+    handleNewJournal(newLog);
+  };
+
   const handleTriggerBreathing = (paceName, paceConfig) => {
     setRecPaceName(paceName);
     setRecPaceConfig(paceConfig);
@@ -162,7 +175,7 @@ export default function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard journals={journals} />;
+        return <Dashboard journals={journals} onQuickLogMood={handleQuickLogMood} />;
       case 'journal':
         return (
           <Journal
