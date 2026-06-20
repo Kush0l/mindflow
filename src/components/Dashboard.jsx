@@ -150,10 +150,18 @@ export default function Dashboard({ journals = [], onQuickLogMood }) {
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
       
       {/* Dynamic Affirmation Banner */}
-      <section className="glass-card fade-in" style={{ borderLeft: '4px solid hsl(var(--color-accent))', padding: '1rem 1.5rem' }} aria-label="Affirmation">
-        <p style={{ margin: 0, fontSize: '1.05rem', fontStyle: 'italic', color: '#fff', fontWeight: '500' }}>
+      <section className="glass-card fade-in" style={{ borderLeft: '4px solid hsl(var(--color-accent))', padding: '1rem 1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }} aria-label="Affirmation">
+        <p style={{ margin: 0, fontSize: '1.05rem', fontStyle: 'italic', color: '#fff', fontWeight: '500', flex: '1 1 250px' }}>
           ✨ "{affirmation}"
         </p>
+        <button
+          type="button"
+          onClick={() => window.print()}
+          className="settings-btn"
+          style={{ background: 'rgba(255, 255, 255, 0.05)', border: '1px solid var(--border-light)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '0.4rem' }}
+        >
+          🖨️ Print Report
+        </button>
       </section>
 
       {/* Grid Layout */}
