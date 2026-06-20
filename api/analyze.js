@@ -45,40 +45,8 @@ module.exports = async (req, res) => {
   try {
     const analysis = await analyzeJournal(cleanJournalText);
 
-    const hasDb = !!process.env.DATABASE_URL;
-    let dbSaved = false;
-
-    if (hasDb) {
-      try {
-        await initDb();
-        // Insert user if not exists
-        await query(
-          'INSERT INTO users (device_id) VALUES ($1) ON CONFLICT (device_id) DO NOTHING',
-          [device_id]
-        );
-        // Insert journal
-        await query(
-          `INSERT INTO journals (device_id, journal_text, mood_score, dominant_emotion, distortions, stressors, response_text)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-          [
-            device_id,
-            cleanJournalText,
-            analysis.moodScore,
-            analysis.dominantEmotion,
-            JSON.stringify(analysis.distortions),
-            JSON.stringify(analysis.stressors),
-            analysis.reframing,
-          ]
-        );
-        dbSaved = true;
-      } catch (dbErr) {
-        console.error('Failed to log journal entry to database:', dbErr);
-      }
-    }
-
     return res.json({
       success: true,
-      dbSaved,
       data: {
         journal_text: cleanJournalText,
         mood_score: analysis.moodScore,

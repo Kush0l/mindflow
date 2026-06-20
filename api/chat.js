@@ -42,36 +42,8 @@ module.exports = async (req, res) => {
   try {
     const chatResult = await generateChatResponse(history, cleanMessage);
 
-    const hasDb = !!process.env.DATABASE_URL;
-    let dbSaved = false;
-
-    if (hasDb) {
-      try {
-        await initDb();
-        // Insert user if not exists
-        await query(
-          'INSERT INTO users (device_id) VALUES ($1) ON CONFLICT (device_id) DO NOTHING',
-          [device_id]
-        );
-        // Log user message
-        await query(
-          'INSERT INTO chats (device_id, role, content) VALUES ($1, $2, $3)',
-          [device_id, 'user', cleanMessage]
-        );
-        // Log assistant response
-        await query(
-          'INSERT INTO chats (device_id, role, content) VALUES ($1, $2, $3)',
-          [device_id, 'assistant', chatResult.response]
-        );
-        dbSaved = true;
-      } catch (dbErr) {
-        console.error('Failed to log chat to database:', dbErr);
-      }
-    }
-
     return res.json({
       success: true,
-      dbSaved,
       data: {
         response: chatResult.response,
         expression: chatResult.expression,
