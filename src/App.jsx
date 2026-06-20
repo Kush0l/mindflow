@@ -135,10 +135,12 @@ export default function App() {
   const handleLogout = () => {
     localStorage.removeItem('mindflow_token');
     localStorage.removeItem('mindflow_email');
+    localStorage.removeItem('mindflow_journals');
+    localStorage.removeItem('mindflow_chats');
     setIsAuthenticated(false);
     setUseOffline(false);
-    setJournals(getLocalJournals());
-    setChats(getLocalChats());
+    setJournals([]);
+    setChats([]);
   };
 
   const handleNewJournal = (journal) => {
