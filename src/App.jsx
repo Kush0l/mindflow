@@ -6,12 +6,13 @@
  * @version 1.1.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import Dashboard from './components/Dashboard';
-import Journal from './components/Journal';
-import Companion from './components/Companion';
-import Mindfulness from './components/Mindfulness';
 import AccessibilitySettings from './components/AccessibilitySettings';
+
+const Journal = lazy(() => import('./components/Journal'));
+const Companion = lazy(() => import('./components/Companion'));
+const Mindfulness = lazy(() => import('./components/Mindfulness'));
 import {
   getOrCreateDeviceId,
   getLocalJournals,
@@ -180,27 +181,33 @@ export default function App() {
         return <Dashboard journals={journals} onQuickLogMood={handleQuickLogMood} />;
       case 'journal':
         return (
-          <Journal
-            journals={journals}
-            deviceId={deviceId}
-            onNewJournal={handleNewJournal}
-            onTriggerBreathing={handleTriggerBreathing}
-          />
+          <Suspense fallback={<div className="skeleton-loader"><div className="skeleton-line" style={{width:'50%'}}></div></div>}>
+            <Journal
+              journals={journals}
+              deviceId={deviceId}
+              onNewJournal={handleNewJournal}
+              onTriggerBreathing={handleTriggerBreathing}
+            />
+          </Suspense>
         );
       case 'companion':
         return (
-          <Companion
-            chats={chats}
-            deviceId={deviceId}
-            onNewMessage={handleNewChatMessage}
-          />
+          <Suspense fallback={<div className="skeleton-loader"><div className="skeleton-line" style={{width:'50%'}}></div></div>}>
+            <Companion
+              chats={chats}
+              deviceId={deviceId}
+              onNewMessage={handleNewChatMessage}
+            />
+          </Suspense>
         );
       case 'mindfulness':
         return (
-          <Mindfulness
-            activePaceName={recPaceName}
-            activePaceConfig={recPaceConfig}
-          />
+          <Suspense fallback={<div className="skeleton-loader"><div className="skeleton-line" style={{width:'50%'}}></div></div>}>
+            <Mindfulness
+              activePaceName={recPaceName}
+              activePaceConfig={recPaceConfig}
+            />
+          </Suspense>
         );
       case 'settings':
         return <AccessibilitySettings />;

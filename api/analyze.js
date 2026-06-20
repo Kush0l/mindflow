@@ -3,15 +3,20 @@
  * Sanitizes input, triggers Gemini cognitive distortion parsing, and logs the result to Postgres.
  *
  * @author MindFlow Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 'use strict';
 
-const { analyzeJournal } = require('../lib/gemini');
+const gemini = require('../lib/gemini');
 const { initDb, query } = require('../lib/db');
 const { isValidUUID, sanitizeInput, setSecurityHeaders, isRateLimited, getAuthUser } = require('../lib/security');
 
+/**
+ * Handles the POST request to analyze a journal entry.
+ * @param {import('@vercel/node').VercelRequest} req - The request object
+ * @param {import('@vercel/node').VercelResponse} res - The response object
+ */
 module.exports = async (req, res) => {
   setSecurityHeaders(res);
 
@@ -29,7 +34,7 @@ module.exports = async (req, res) => {
   }
 
   const hasDb = !!process.env.DATABASE_URL;
-  const { device_id, journal_text } = req.body;
+  const { device_id, journal_text, past_entries } = req.body;
 
   if (hasDb) {
     const authUser = getAuthUser(req);
@@ -49,9 +54,16 @@ module.exports = async (req, res) => {
       message: 'Journal entry must be at least 10 characters long.',
     });
   }
+  
+  if (cleanJournalText.length > 2000) {
+    return res.status(400).json({
+      success: false,
+      message: 'Journal entry exceeds the 2000 character limit.',
+    });
+  }
 
   try {
-    const analysis = await analyzeJournal(cleanJournalText);
+    const analysis = await gemini.analyzeJournal(cleanJournalText, Array.isArray(past_entries) ? past_entries : []);
 
     return res.json({
       success: true,

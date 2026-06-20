@@ -47,6 +47,10 @@ module.exports = async (req, res) => {
     return res.status(400).json({ success: false, message: 'Message cannot be empty.' });
   }
 
+  if (cleanMessage.length > 2000) {
+    return res.status(400).json({ success: false, message: 'Message exceeds the 2000 character limit.' });
+  }
+
   try {
     const chatResult = await generateChatResponse(history, cleanMessage);
 

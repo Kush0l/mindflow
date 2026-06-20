@@ -46,6 +46,7 @@ export default function Journal({ journals = [], deviceId, onNewJournal, onTrigg
         body: JSON.stringify({
           device_id: deviceId,
           journal_text: entry,
+          past_entries: journals.slice(-3).map(j => ({ journal_text: j.journal_text, mood_score: j.mood_score, dominant_emotion: j.dominant_emotion })),
         }),
       });
 

@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import useWeatherWidget from '../utils/useWeatherWidget';
 
 const affirmations = [
   "An exam is a measure of a single moment, not your intelligence or potential.",
@@ -18,23 +19,7 @@ const affirmations = [
   "You have successfully navigated tough preparation days before; you can navigate today."
 ];
 
-/**
- * Gets emotional weather details based on average mood score.
- *
- * @param {number} avgMood - Average mood score (1-10)
- * @returns {{ icon: string, name: string, desc: string, class: string }}
- */
-function getWeather(avgMood) {
-  if (avgMood >= 8) {
-    return { icon: '☀️', name: 'Clear Skies', desc: 'Balanced & Composed', class: 'sunny' };
-  } else if (avgMood >= 6) {
-    return { icon: '🌤️', name: 'Partly Cloudy', desc: 'Mild Preparation Pressure', class: 'cloudy' };
-  } else if (avgMood >= 4) {
-    return { icon: '☁️', name: 'Overcast', desc: 'High Stress Load', class: 'overcast' };
-  } else {
-    return { icon: '⛈️', name: 'Stormy / High Pressure', desc: 'Severe Exam Burnout', class: 'stormy' };
-  }
-}
+
 
 /**
  * Dashboard Component
@@ -94,13 +79,11 @@ export default function Dashboard({ journals = [], onQuickLogMood }) {
     );
   }
 
+  // Use the custom hook for weather and mood calculations
+  const { avgMood, weather } = useWeatherWidget(journals);
+
   // Calculate statistics
   const total = journals.length;
-  const moodScores = journals.map((j) => Number(j.mood_score || 0));
-  const avgMood = (moodScores.reduce((sum, val) => sum + val, 0) / total).toFixed(1);
-
-  // Weather configuration
-  const weather = getWeather(Number(avgMood));
 
   // Limit to last 7 logs for graph
   const recentJournals = journals.slice(-7);
