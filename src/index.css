@@ -1,0 +1,666 @@
+/* ============================================================
+ * MindFlow Core CSS & Design System
+ * 
+ * Table of Contents:
+ * 1. Variables & Design Tokens
+ * 2. Accessibility & Typography
+ * 3. Base Styles & Scrollbars
+ * 4. Glassmorphism Utilities
+ * 5. Layout & Navigation Tabs
+ * 6. Dashboard: Stress Weather & Graphs
+ * 7. Journal: Input & Analysis Cards
+ * 8. Companion: Empathetic Chat Room
+ * 9. Mindfulness: Animated Breathing Player
+ * 10. Settings & Accessibility Controls
+ * 11. Keyframe Animations
+ * ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap');
+
+/* ============================================================
+ * 1. Variables & Design Tokens
+ * ============================================================ */
+:root {
+  /* Fonts */
+  --font-sans: 'Outfit', sans-serif;
+  --font-dyslexic: 'Comic Sans MS', 'OpenDyslexic', sans-serif;
+
+  /* Colors - Calming Lavenders & Indigos */
+  --bg-primary: #0a0b16;
+  --color-primary: 245, 82%, 75%; /* Soft Lavender HSL */
+  --color-primary-dark: 245, 60%, 55%;
+  --color-accent: 185, 85%, 65%; /* Soft Teal */
+  --color-card-bg: rgba(20, 22, 45, 0.45);
+  
+  --text-main: #f3f4f6;
+  --text-muted: #9ca3af;
+  --border-light: rgba(255, 255, 255, 0.08);
+  --border-glow: rgba(147, 51, 234, 0.3);
+
+  /* Shadows & Radius */
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --shadow-glow: 0 8px 32px 0 rgba(147, 51, 234, 0.15);
+
+  /* Text Scale Multipliers */
+  --text-base-size: 1rem;
+}
+
+/* ============================================================
+ * 2. Accessibility & Typography
+ * ============================================================ */
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-primary);
+  color: var(--text-main);
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  font-size: var(--text-base-size);
+  line-height: 1.6;
+  overflow-x: hidden;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Dyslexia Mode */
+body.dyslexia-font {
+  font-family: var(--font-dyslexic) !important;
+}
+
+/* Text Scaling */
+body.scale-sm { --text-base-size: 0.85rem; }
+body.scale-md { --text-base-size: 1rem; }
+body.scale-lg { --text-base-size: 1.2rem; }
+
+/* High Contrast Mode */
+body.high-contrast {
+  --bg-primary: #000000;
+  --text-main: #ffffff;
+  --text-muted: #e5e7eb;
+  --color-card-bg: rgba(0, 0, 0, 0.95);
+  --border-light: #ffffff;
+  --border-glow: #ffffff;
+  --shadow-glow: none;
+}
+
+body.high-contrast .glass-card,
+body.high-contrast .chat-bubble {
+  background: #000000 !important;
+  border: 2px solid #ffffff !important;
+  box-shadow: none !important;
+}
+
+/* Skip Navigation Link */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 1rem;
+  background: hsl(var(--color-primary));
+  color: #000;
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  z-index: 1000;
+  text-decoration: none;
+  font-weight: bold;
+  transition: top 0.2s ease;
+}
+.skip-link:focus {
+  top: 1rem;
+}
+
+/* ============================================================
+ * 3. Base Styles & Scrollbars
+ * ============================================================ */
+* {
+  box-sizing: border-box;
+}
+
+/* Focus indicator for keyboard navigation */
+*:focus-visible {
+  outline: 3px solid hsl(var(--color-accent));
+  outline-offset: 4px;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* ============================================================
+ * 4. Glassmorphism Utilities
+ * ============================================================ */
+.bg-orbs {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  z-index: -1;
+  overflow: hidden;
+}
+.orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.15;
+  mix-blend-mode: screen;
+  animation: float 20s infinite ease-in-out;
+}
+.orb-1 {
+  width: 400px;
+  height: 400px;
+  background: hsl(var(--color-primary));
+  top: -10%;
+  right: -5%;
+}
+.orb-2 {
+  width: 350px;
+  height: 350px;
+  background: hsl(var(--color-accent));
+  bottom: -5%;
+  left: -5%;
+  animation-delay: -5s;
+}
+
+.glass-card {
+  background: var(--color-card-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-glow);
+  padding: 1.5rem;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+.glass-card:hover {
+  border-color: var(--border-glow);
+}
+
+/* ============================================================
+ * 5. Layout & Navigation Tabs
+ * ============================================================ */
+.app-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1rem;
+}
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.logo-icon {
+  font-size: 2rem;
+}
+.logo-title {
+  margin: 0;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-accent)));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.tab-nav {
+  display: flex;
+  gap: 0.5rem;
+  background: rgba(255, 255, 255, 0.03);
+  padding: 0.4rem;
+  border-radius: var(--radius-md);
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+.tab-btn {
+  flex: 1;
+  min-width: 120px;
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  padding: 0.8rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+.tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.05);
+}
+.tab-btn.active {
+  background: hsl(var(--color-primary-dark));
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+}
+
+/* ============================================================
+ * 6. Dashboard: Stress Weather & Graphs
+ * ============================================================ */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: 1.5rem;
+}
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.weather-widget {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 2.5rem 1.5rem;
+}
+.weather-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  animation: hover-slow 4s infinite ease-in-out;
+}
+.weather-title {
+  margin: 0;
+  font-size: 1.6rem;
+  font-weight: 600;
+}
+.weather-subtitle {
+  color: var(--text-muted);
+  margin: 0.5rem 0 0 0;
+}
+
+.graph-container {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  height: 180px;
+  gap: 0.8rem;
+  padding: 1rem 0;
+}
+.chart-bar-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+  justify-content: flex-end;
+}
+.chart-bar {
+  width: 100%;
+  background: linear-gradient(180deg, hsl(var(--color-accent)), hsl(var(--color-primary-dark)));
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+  transition: height 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  min-height: 5px;
+}
+.chart-label {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.stat-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+.stat-badge {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
+  padding: 0.3rem 0.6rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.85rem;
+}
+
+/* ============================================================
+ * 7. Journal: Input & Analysis Cards
+ * ============================================================ */
+.journal-layout {
+  display: grid;
+  grid-template-columns: 1.2fr 1fr;
+  gap: 1.5rem;
+}
+@media (max-width: 900px) {
+  .journal-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.textarea-field {
+  width: 100%;
+  min-height: 250px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-md);
+  padding: 1rem;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 1rem;
+  resize: vertical;
+  margin-bottom: 1rem;
+  outline: none;
+  transition: border-color 0.2s ease;
+}
+.textarea-field:focus {
+  border-color: hsl(var(--color-primary));
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, hsl(var(--color-primary-dark)), hsl(var(--color-accent)));
+  color: #fff;
+  border: none;
+  padding: 0.8rem 1.5rem;
+  border-radius: var(--radius-sm);
+  font-weight: 600;
+  font-family: inherit;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, opacity 0.2s ease;
+}
+.btn-primary:hover {
+  transform: translateY(-2px);
+  opacity: 0.95;
+}
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Analysis Outputs */
+.analysis-title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0;
+  font-size: 1.3rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.5rem;
+}
+.distortion-card {
+  background: rgba(239, 68, 68, 0.1);
+  border-left: 4px solid #ef4444;
+  padding: 1rem;
+  border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+  margin-bottom: 1rem;
+}
+.distortion-quote {
+  font-style: italic;
+  color: #fca5a5;
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+}
+
+.mindfulness-rx-card {
+  background: rgba(14, 165, 233, 0.1);
+  border: 1px solid rgba(14, 165, 233, 0.3);
+  padding: 1rem;
+  border-radius: var(--radius-md);
+  margin-top: 1rem;
+}
+
+/* Skeleton Loading Loader */
+.skeleton-loader {
+  animation: pulse 1.5s infinite ease-in-out;
+}
+.skeleton-line {
+  height: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  margin-bottom: 0.8rem;
+  border-radius: 4px;
+}
+
+/* ============================================================
+ * 8. Companion: Empathetic Chat Room
+ * ============================================================ */
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  height: 550px;
+}
+.chat-header {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 0.8rem;
+  margin-bottom: 1rem;
+}
+.avatar-circle {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, hsl(var(--color-primary)), hsl(var(--color-accent)));
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 16px rgba(147, 51, 234, 0.4);
+}
+.avatar-circle.calm { transform: scale(1); }
+.avatar-circle.thoughtful { transform: rotate(15deg); }
+.avatar-circle.alert { animation: alert-shake 0.5s ease; }
+
+.chat-history {
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+.chat-bubble {
+  max-width: 75%;
+  padding: 0.8rem 1.2rem;
+  border-radius: var(--radius-md);
+  font-size: 0.95rem;
+}
+.chat-bubble.user {
+  align-self: flex-end;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-light);
+  border-bottom-right-radius: 4px;
+}
+.chat-bubble.model {
+  align-self: flex-start;
+  background: rgba(147, 51, 234, 0.12);
+  border: 1px solid rgba(147, 51, 234, 0.25);
+  border-bottom-left-radius: 4px;
+}
+
+.chat-input-bar {
+  display: flex;
+  gap: 0.5rem;
+}
+.chat-input-bar input {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  color: var(--text-main);
+  font-family: inherit;
+  font-size: 0.95rem;
+  outline: none;
+}
+.chat-input-bar input:focus {
+  border-color: hsl(var(--color-primary));
+}
+
+/* ============================================================
+ * 9. Mindfulness: Animated Breathing Player
+ * ============================================================ */
+.mindfulness-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 2rem 0;
+}
+
+.breathing-bubble-wrapper {
+  width: 250px;
+  height: 250px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  margin-bottom: 2rem;
+}
+.breathing-bubble {
+  width: 140px;
+  height: 140px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(6, 182, 212, 0.4) 0%, rgba(147, 51, 234, 0.1) 70%);
+  border: 2px solid hsl(var(--color-accent));
+  box-shadow: 0 0 40px rgba(6, 182, 212, 0.3);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: bold;
+  font-size: 1.2rem;
+  color: #fff;
+  transition: transform 1s ease-in-out;
+}
+
+/* Breathing animation helper states */
+.breathing-bubble.inhale {
+  transform: scale(1.6);
+  background: radial-gradient(circle, rgba(147, 51, 234, 0.6) 0%, rgba(6, 182, 212, 0.2) 70%);
+  border-color: hsl(var(--color-primary));
+  box-shadow: 0 0 60px rgba(147, 51, 234, 0.5);
+}
+.breathing-bubble.hold {
+  transform: scale(1.6);
+  animation: pulse-border 1s infinite ease-in-out;
+}
+.breathing-bubble.exhale {
+  transform: scale(1);
+}
+
+.pace-selector {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+}
+.pace-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
+  color: var(--text-muted);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+.pace-btn:hover {
+  color: var(--text-main);
+  background: rgba(255, 255, 255, 0.08);
+}
+.pace-btn.active {
+  border-color: hsl(var(--color-accent));
+  color: #fff;
+  background: rgba(6, 182, 212, 0.15);
+}
+
+/* ============================================================
+ * 10. Settings & Accessibility Controls
+ * ============================================================ */
+.settings-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+.settings-section {
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 1rem;
+}
+.settings-label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+}
+.settings-options {
+  display: flex;
+  gap: 0.5rem;
+}
+.settings-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 0.5rem 1rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+.settings-btn.active {
+  background: hsl(var(--color-primary-dark));
+  color: #fff;
+  border-color: hsl(var(--color-primary));
+}
+
+/* ============================================================
+ * 11. Keyframe Animations
+ * ============================================================ */
+@keyframes float {
+  0% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-20px) scale(1.05); }
+  100% { transform: translateY(0) scale(1); }
+}
+
+@keyframes hover-slow {
+  0% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+
+@keyframes pulse-border {
+  0%, 100% { box-shadow: 0 0 60px rgba(147, 51, 234, 0.5); }
+  50% { box-shadow: 0 0 80px rgba(147, 51, 234, 0.7); }
+}
+
+@keyframes alert-shake {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(-10deg); }
+  75% { transform: rotate(10deg); }
+}
+
+/* Disable Animations under Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}

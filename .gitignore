@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Production build output
+dist/
+
+# Local env files
+.env
+.env.local
+
+# Vercel temporary folder
+.vercel/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test logs
+*.log
