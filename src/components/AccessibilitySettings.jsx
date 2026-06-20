@@ -51,6 +51,9 @@ export default function AccessibilitySettings() {
     localStorage.setItem('a11y_contrast', String(enabled));
     if (enabled) {
       document.body.classList.add('high-contrast');
+      // If we enable high contrast, turn off light mode implicitly via localstorage/class
+      localStorage.setItem('a11y_light_mode', 'false');
+      document.body.classList.remove('light-mode');
     } else {
       document.body.classList.remove('high-contrast');
     }

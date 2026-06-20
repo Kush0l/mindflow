@@ -91,6 +91,49 @@ body.high-contrast .chat-bubble {
   box-shadow: none !important;
 }
 
+/* Light Mode */
+body.light-mode {
+  --bg-primary: #f8f9fa;
+  --text-main: #1f2937;
+  --text-muted: #6b7280;
+  --color-card-bg: rgba(255, 255, 255, 0.7);
+  --border-light: rgba(0, 0, 0, 0.1);
+  --border-glow: rgba(147, 51, 234, 0.2);
+  --shadow-glow: 0 8px 32px 0 rgba(147, 51, 234, 0.1);
+}
+
+body.light-mode .glass-card {
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* Theme Toggle Button */
+.theme-toggle-btn {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
+  color: var(--text-main);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(8px);
+}
+.theme-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+.theme-toggle-btn.absolute-top-right {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  z-index: 100;
+}
+
 /* Skip Navigation Link */
 .skip-link {
   position: absolute;

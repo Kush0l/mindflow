@@ -36,16 +36,19 @@ export default function App() {
 
   // Authentication State
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [useOffline, setUseOffline] = useState(false);
   const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [authError, setAuthError] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Recommended breathing parameters
   const [recPaceName, setRecPaceName] = useState(null);
   const [recPaceConfig, setRecPaceConfig] = useState(null);
+
+  // Global Theme State
+  const [isLightMode, setIsLightMode] = useState(false);
 
   useEffect(() => {
     // 1. Get or create anonymous Device ID session
@@ -55,6 +58,11 @@ export default function App() {
     // 2. Load cached logs immediately (local-first)
     setJournals(getLocalJournals());
     setChats(getLocalChats());
+
+    // 2.5 Load global theme
+    const savedLightMode = localStorage.getItem('a11y_light_mode') === 'true';
+    setIsLightMode(savedLightMode);
+    if (savedLightMode) document.body.classList.add('light-mode');
 
     // 3. Verify active JWT token on load
     const savedToken = localStorage.getItem('mindflow_token');
@@ -139,7 +147,6 @@ export default function App() {
     localStorage.removeItem('mindflow_journals');
     localStorage.removeItem('mindflow_chats');
     setIsAuthenticated(false);
-    setUseOffline(false);
     setJournals([]);
     setChats([]);
   };
@@ -173,6 +180,21 @@ export default function App() {
     setRecPaceName(paceName);
     setRecPaceConfig(paceConfig);
     setActiveTab('mindfulness');
+  };
+
+  const toggleTheme = () => {
+    const newLightMode = !isLightMode;
+    setIsLightMode(newLightMode);
+    localStorage.setItem('a11y_light_mode', String(newLightMode));
+    
+    if (newLightMode) {
+      document.body.classList.add('light-mode');
+      // Ensure high contrast is off if switching to light mode
+      localStorage.setItem('a11y_contrast', 'false');
+      document.body.classList.remove('high-contrast');
+    } else {
+      document.body.classList.remove('light-mode');
+    }
   };
 
   const renderContent = () => {
@@ -216,14 +238,24 @@ export default function App() {
     }
   };
 
-  // Render Authentication Screen if not logged in and not choosing offline bypass
-  if (!isAuthenticated && !useOffline) {
+  // Render Authentication Screen if not logged in
+  if (!isAuthenticated) {
     return (
       <>
         <div className="bg-orbs" aria-hidden="true">
           <div className="orb orb-1"></div>
           <div className="orb orb-2"></div>
         </div>
+
+        <button
+          onClick={toggleTheme}
+          className="theme-toggle-btn absolute-top-right"
+          aria-label={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+          title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+        >
+          {isLightMode ? '🌙 Dark Mode' : '☀️ Light Mode'}
+        </button>
+
         <div className="app-container" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center' }}>
           <section className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2rem' }} aria-labelledby="auth-title">
             <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
@@ -251,16 +283,41 @@ export default function App() {
 
               <div>
                 <label className="settings-label" htmlFor="auth-password">Password</label>
-                <input
-                  id="auth-password"
-                  type="password"
-                  className="chat-input-bar"
-                  style={{ width: '100%', padding: '0.7rem 1rem' }}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  required
-                />
+                <div style={{ position: 'relative' }}>
+                  <input
+                    id="auth-password"
+                    type={showPassword ? "text" : "password"}
+                    className="chat-input-bar"
+                    style={{ width: '100%', padding: '0.7rem 1rem', paddingRight: '2.5rem' }}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    style={{
+                      position: 'absolute',
+                      right: '0.5rem',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-muted)',
+                      cursor: 'pointer',
+                      fontSize: '1.2rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '0.2rem'
+                    }}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? '👁️‍🗨️' : '👁️'}
+                  </button>
+                </div>
               </div>
 
               {authError && (
@@ -282,15 +339,6 @@ export default function App() {
                 onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
               >
                 {authMode === 'login' ? "Need an account? Register" : "Already have an account? Login"}
-              </button>
-
-              <button
-                type="button"
-                className="settings-btn"
-                style={{ width: '100%', border: '1px dashed var(--border-light)', background: 'rgba(255, 255, 255, 0.02)' }}
-                onClick={() => setUseOffline(true)}
-              >
-                Continue Offline (Local Storage Mode)
               </button>
             </div>
 
@@ -335,6 +383,14 @@ export default function App() {
           
           {/* Database Sync Indicators & User Session */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle-btn"
+              aria-label={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+              title={isLightMode ? "Switch to Dark Mode" : "Switch to Light Mode"}
+            >
+              {isLightMode ? '🌙' : '☀️'}
+            </button>
             <div>
               {syncing ? (
                 <span>🔄 Syncing with Neon...</span>
@@ -355,15 +411,6 @@ export default function App() {
                   Logout
                 </button>
               </div>
-            )}
-            {useOffline && (
-              <button
-                type="button"
-                onClick={() => setUseOffline(false)}
-                style={{ background: 'transparent', border: 'none', color: 'hsl(var(--color-primary))', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
-              >
-                Log In
-              </button>
             )}
           </div>
         </header>
