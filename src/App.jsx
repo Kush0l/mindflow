@@ -1,9 +1,9 @@
 /**
  * @fileoverview App component.
- * Root UI composition, layout structure, and state management.
+ * Root UI composition, layout structure, authentication, and state management.
  *
  * @author MindFlow Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 import React, { useState, useEffect } from 'react';
@@ -33,6 +33,15 @@ export default function App() {
   const [syncing, setSyncing] = useState(false);
   const [syncSuccess, setSyncSuccess] = useState(null);
 
+  // Authentication State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [useOffline, setUseOffline] = useState(false);
+  const [authMode, setAuthMode] = useState('login'); // 'login' | 'register'
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [authError, setAuthError] = useState('');
+  const [authLoading, setAuthLoading] = useState(false);
+
   // Recommended breathing parameters
   const [recPaceName, setRecPaceName] = useState(null);
   const [recPaceConfig, setRecPaceConfig] = useState(null);
@@ -46,8 +55,27 @@ export default function App() {
     setJournals(getLocalJournals());
     setChats(getLocalChats());
 
-    // 3. Sync with Neon Postgres in background
-    triggerSync();
+    // 3. Verify active JWT token on load
+    const savedToken = localStorage.getItem('mindflow_token');
+    if (savedToken) {
+      fetch('/api/auth/me', {
+        headers: { 'Authorization': `Bearer ${savedToken}` }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          setIsAuthenticated(true);
+          triggerSync();
+        } else {
+          localStorage.removeItem('mindflow_token');
+          localStorage.removeItem('mindflow_email');
+        }
+      })
+      .catch(err => {
+        console.warn('Could not verify token online, operating locally:', err);
+        setIsAuthenticated(true); // Keep active for offline resilience
+      });
+    }
   }, []);
 
   const triggerSync = async () => {
@@ -70,17 +98,58 @@ export default function App() {
     }
   };
 
+  const handleAuthSubmit = async (e) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError('');
+
+    const endpoint = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        throw new Error(result.message || 'Authentication failed');
+      }
+
+      if (result.success) {
+        localStorage.setItem('mindflow_token', result.token);
+        localStorage.setItem('mindflow_email', result.user.email);
+        setIsAuthenticated(true);
+        triggerSync();
+      }
+    } catch (err) {
+      console.error(err);
+      setAuthError(err.message || 'Server error. Failed to authenticate.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('mindflow_token');
+    localStorage.removeItem('mindflow_email');
+    setIsAuthenticated(false);
+    setUseOffline(false);
+    setJournals(getLocalJournals());
+    setChats(getLocalChats());
+  };
+
   const handleNewJournal = (journal) => {
     saveJournalLocally(journal);
     setJournals((prev) => [...prev, journal]);
-    // Sync to database in background
     triggerSync();
   };
 
   const handleNewChatMessage = (msg) => {
     saveChatLocally(msg);
     setChats((prev) => [...prev, msg]);
-    // Sync to database in background
     triggerSync();
   };
 
@@ -125,6 +194,97 @@ export default function App() {
     }
   };
 
+  // Render Authentication Screen if not logged in and not choosing offline bypass
+  if (!isAuthenticated && !useOffline) {
+    return (
+      <>
+        <div className="bg-orbs" aria-hidden="true">
+          <div className="orb orb-1"></div>
+          <div className="orb orb-2"></div>
+        </div>
+        <div className="app-container" style={{ display: 'flex', minHeight: '100vh', justifyContent: 'center', alignItems: 'center' }}>
+          <section className="glass-card" style={{ width: '100%', maxWidth: '440px', padding: '2rem' }} aria-labelledby="auth-title">
+            <div style={{ textAlign: 'center', marginBottom: '1.5rem' }}>
+              <span style={{ fontSize: '3rem' }} aria-hidden="true">🌌</span>
+              <h1 id="auth-title" className="logo-title" style={{ fontSize: '2rem', marginTop: '0.5rem' }}>MindFlow</h1>
+              <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', margin: '0.2rem 0 0 0' }}>
+                Student Stress Wellness Companion
+              </p>
+            </div>
+
+            <form onSubmit={handleAuthSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+              <div>
+                <label className="settings-label" htmlFor="auth-email">Email Address</label>
+                <input
+                  id="auth-email"
+                  type="email"
+                  className="chat-input-bar"
+                  style={{ width: '100%', padding: '0.7rem 1rem' }}
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="name@example.com"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="settings-label" htmlFor="auth-password">Password</label>
+                <input
+                  id="auth-password"
+                  type="password"
+                  className="chat-input-bar"
+                  style={{ width: '100%', padding: '0.7rem 1rem' }}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                />
+              </div>
+
+              {authError && (
+                <div style={{ color: '#ef4444', fontSize: '0.9rem', fontWeight: '500' }} role="alert">
+                  ⚠️ {authError}
+                </div>
+              )}
+
+              <button type="submit" className="btn-primary" disabled={authLoading} style={{ width: '100%', marginTop: '0.5rem' }}>
+                {authLoading ? 'Verifying...' : authMode === 'login' ? 'Login' : 'Create Account'}
+              </button>
+            </form>
+
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', marginTop: '1.5rem' }}>
+              <button
+                type="button"
+                className="settings-btn"
+                style={{ background: 'transparent', border: 'none', color: 'hsl(var(--color-primary))', textDecoration: 'underline', cursor: 'pointer' }}
+                onClick={() => setAuthMode(authMode === 'login' ? 'register' : 'login')}
+              >
+                {authMode === 'login' ? "Need an account? Register" : "Already have an account? Login"}
+              </button>
+
+              <button
+                type="button"
+                className="settings-btn"
+                style={{ width: '100%', border: '1px dashed var(--border-light)', background: 'rgba(255, 255, 255, 0.02)' }}
+                onClick={() => setUseOffline(true)}
+              >
+                Continue Offline (Local Storage Mode)
+              </button>
+            </div>
+
+            <div style={{ marginTop: '2rem', padding: '0.8rem', background: 'rgba(147, 51, 234, 0.1)', border: '1px solid rgba(147, 51, 234, 0.3)', borderRadius: 'var(--radius-sm)', fontSize: '0.85rem' }}>
+              <strong>💡 Test Credentials:</strong>
+              <div style={{ marginTop: '0.3rem' }}>
+                Email: <code>student@mindflow.com</code><br />
+                Password: <code>Student123!</code>
+              </div>
+            </div>
+          </section>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       {/* Background Orbs */}
@@ -151,14 +311,37 @@ export default function App() {
             </div>
           </div>
           
-          {/* Database Sync Indicators */}
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
-            {syncing ? (
-              <span>🔄 Syncing with Neon...</span>
-            ) : syncSuccess ? (
-              <span style={{ color: '#10b981' }}>🟢 Connected to Neon DB</span>
-            ) : (
-              <span style={{ color: 'var(--text-muted)' }}>⚪ Offline Storage Mode</span>
+          {/* Database Sync Indicators & User Session */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+            <div>
+              {syncing ? (
+                <span>🔄 Syncing with Neon...</span>
+              ) : syncSuccess ? (
+                <span style={{ color: '#10b981' }}>🟢 Connected to Neon DB</span>
+              ) : (
+                <span style={{ color: 'var(--text-muted)' }}>⚪ Offline Storage Mode</span>
+              )}
+            </div>
+            {isAuthenticated && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', borderLeft: '1px solid var(--border-light)', paddingLeft: '1rem' }}>
+                <span>{localStorage.getItem('mindflow_email')}</span>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  style={{ background: 'transparent', border: 'none', color: '#ef4444', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+                >
+                  Logout
+                </button>
+              </div>
+            )}
+            {useOffline && (
+              <button
+                type="button"
+                onClick={() => setUseOffline(false)}
+                style={{ background: 'transparent', border: 'none', color: 'hsl(var(--color-primary))', textDecoration: 'underline', cursor: 'pointer', fontFamily: 'inherit', padding: 0 }}
+              >
+                Log In
+              </button>
             )}
           </div>
         </header>
@@ -177,7 +360,6 @@ export default function App() {
               className={`tab-btn ${activeTab === tab.id ? 'active' : ''}`}
               onClick={() => {
                 setActiveTab(tab.id);
-                // Clear recommendations if manually changing tab
                 if (tab.id !== 'mindfulness') {
                   setRecPaceName(null);
                   setRecPaceConfig(null);

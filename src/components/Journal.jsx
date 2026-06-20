@@ -34,9 +34,15 @@ export default function Journal({ journals = [], deviceId, onNewJournal, onTrigg
     setCurrentAnalysis(null);
 
     try {
+      const token = localStorage.getItem('mindflow_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({
           device_id: deviceId,
           journal_text: entry,

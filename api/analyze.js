@@ -10,7 +10,7 @@
 
 const { analyzeJournal } = require('../lib/gemini');
 const { initDb, query } = require('../lib/db');
-const { isValidUUID, sanitizeInput, setSecurityHeaders, isRateLimited } = require('../lib/security');
+const { isValidUUID, sanitizeInput, setSecurityHeaders, isRateLimited, getAuthUser } = require('../lib/security');
 
 module.exports = async (req, res) => {
   setSecurityHeaders(res);
@@ -28,10 +28,18 @@ module.exports = async (req, res) => {
     return res.status(429).json({ success: false, message: 'Too many requests. Please slow down.' });
   }
 
+  const hasDb = !!process.env.DATABASE_URL;
   const { device_id, journal_text } = req.body;
 
-  if (!isValidUUID(device_id)) {
-    return res.status(400).json({ success: false, message: 'Invalid device_id format.' });
+  if (hasDb) {
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return res.status(401).json({ success: false, message: 'Unauthorized. Invalid or missing token.' });
+    }
+  } else {
+    if (!isValidUUID(device_id)) {
+      return res.status(400).json({ success: false, message: 'Invalid device_id format.' });
+    }
   }
 
   const cleanJournalText = sanitizeInput(journal_text);

@@ -1,15 +1,16 @@
 /**
  * @fileoverview Serverless endpoint for syncing local history with Neon Postgres.
  * Handles GET (fetching history) and POST (backing up data).
+ * Secures access using JWT authentication.
  *
  * @author MindFlow Team
- * @version 1.0.0
+ * @version 1.1.0
  */
 
 'use strict';
 
 const { initDb, query } = require('../lib/db');
-const { isValidUUID, setSecurityHeaders, isRateLimited } = require('../lib/security');
+const { isValidUUID, setSecurityHeaders, isRateLimited, getAuthUser } = require('../../lib/security');
 
 module.exports = async (req, res) => {
   setSecurityHeaders(res);
@@ -24,6 +25,16 @@ module.exports = async (req, res) => {
   }
 
   const hasDb = !!process.env.DATABASE_URL;
+  let userId = null;
+
+  // Authentication Flow
+  if (hasDb) {
+    const authUser = getAuthUser(req);
+    if (!authUser) {
+      return res.status(401).json({ success: false, message: 'Unauthorized. Invalid or missing token.' });
+    }
+    userId = authUser.id;
+  }
 
   try {
     if (hasDb) {
@@ -32,23 +43,22 @@ module.exports = async (req, res) => {
 
     // GET: Retrieve user history
     if (req.method === 'GET') {
-      const { device_id } = req.query;
-
-      if (!isValidUUID(device_id)) {
-        return res.status(400).json({ success: false, message: 'Invalid device_id format.' });
-      }
-
       if (!hasDb) {
+        // Offline / No-DB Mode
+        const { device_id } = req.query;
+        if (!isValidUUID(device_id)) {
+          return res.status(400).json({ success: false, message: 'Invalid device_id format.' });
+        }
         return res.json({ success: true, dbSynced: false, journals: [], chats: [] });
       }
 
       const journalsRes = await query(
-        'SELECT journal_text, mood_score, dominant_emotion, distortions, stressors, response_text, created_at FROM journals WHERE device_id = $1 ORDER BY created_at ASC',
-        [device_id]
+        'SELECT journal_text, mood_score, dominant_emotion, distortions, stressors, response_text, created_at FROM journals WHERE user_id = $1 ORDER BY created_at ASC',
+        [userId]
       );
       const chatsRes = await query(
-        'SELECT role, content, created_at FROM chats WHERE device_id = $1 ORDER BY created_at ASC',
-        [device_id]
+        'SELECT role, content, created_at FROM chats WHERE user_id = $1 ORDER BY created_at ASC',
+        [userId]
       );
 
       return res.json({
@@ -63,32 +73,25 @@ module.exports = async (req, res) => {
     if (req.method === 'POST') {
       const { device_id, journals = [], chats = [] } = req.body;
 
-      if (!isValidUUID(device_id)) {
-        return res.status(400).json({ success: false, message: 'Invalid device_id format.' });
-      }
-
       if (!hasDb) {
+        if (!isValidUUID(device_id)) {
+          return res.status(400).json({ success: false, message: 'Invalid device_id format.' });
+        }
         return res.json({ success: true, dbSynced: false });
       }
-
-      // Ensure user session exists
-      await query(
-        'INSERT INTO users (device_id) VALUES ($1) ON CONFLICT (device_id) DO NOTHING',
-        [device_id]
-      );
 
       // Sync journal records (preventing duplicates)
       for (const j of journals) {
         const existing = await query(
-          'SELECT id FROM journals WHERE device_id = $1 AND created_at = $2',
-          [device_id, j.created_at]
+          'SELECT id FROM journals WHERE user_id = $1 AND created_at = $2',
+          [userId, j.created_at]
         );
         if (existing.rowCount === 0) {
           await query(
-            `INSERT INTO journals (device_id, journal_text, mood_score, dominant_emotion, distortions, stressors, response_text, created_at)
+            `INSERT INTO journals (user_id, journal_text, mood_score, dominant_emotion, distortions, stressors, response_text, created_at)
              VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
             [
-              device_id,
+              userId,
               j.journal_text,
               j.mood_score,
               j.dominant_emotion,
@@ -104,13 +107,13 @@ module.exports = async (req, res) => {
       // Sync chat records (preventing duplicates)
       for (const c of chats) {
         const existing = await query(
-          'SELECT id FROM chats WHERE device_id = $1 AND content = $2 AND created_at = $3',
-          [device_id, c.content, c.created_at]
+          'SELECT id FROM chats WHERE user_id = $1 AND content = $2 AND created_at = $3',
+          [userId, c.content, c.created_at]
         );
         if (existing.rowCount === 0) {
           await query(
-            'INSERT INTO chats (device_id, role, content, created_at) VALUES ($1, $2, $3, $4)',
-            [device_id, c.role, c.content, c.created_at || new Date()]
+            'INSERT INTO chats (user_id, role, content, created_at) VALUES ($1, $2, $3, $4)',
+            [userId, c.role, c.content, c.created_at || new Date()]
           );
         }
       }

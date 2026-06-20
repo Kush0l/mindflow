@@ -100,10 +100,16 @@ export async function syncWithDatabase() {
   const localJournals = getLocalJournals();
   const localChats = getLocalChats();
 
+  const token = localStorage.getItem('mindflow_token');
+  const headers = { 'Content-Type': 'application/json' };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
   try {
     const response = await fetch('/api/sync', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: headers,
       body: JSON.stringify({
         device_id: deviceId,
         journals: localJournals,
@@ -122,7 +128,9 @@ export async function syncWithDatabase() {
 
     // If successfully synced, fetch server-side full logs to reconcile
     if (result.dbSynced) {
-      const fetchResponse = await fetch(`/api/sync?device_id=${deviceId}`);
+      const fetchResponse = await fetch(`/api/sync?device_id=${deviceId}`, {
+        headers: headers,
+      });
       if (fetchResponse.ok) {
         const fetchResult = await fetchResponse.json();
         if (fetchResult.success) {

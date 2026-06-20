@@ -60,9 +60,15 @@ export default function Companion({ chats = [], deviceId, onNewMessage }) {
     }));
 
     try {
+      const token = localStorage.getItem('mindflow_token');
+      const headers = { 'Content-Type': 'application/json' };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const response = await fetch('/api/chat', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: headers,
         body: JSON.stringify({
           device_id: deviceId,
           message: userMessage,
