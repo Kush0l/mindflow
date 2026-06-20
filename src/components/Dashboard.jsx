@@ -42,6 +42,10 @@ export default function Dashboard({ journals = [], onQuickLogMood }) {
     setBreathingCount(count);
   }, [journals]);
 
+  // Use the custom hook for weather and mood calculations
+  // Must be called unconditionally before any early returns (React Rules of Hooks)
+  const { avgMood, weather } = useWeatherWidget(journals);
+
   if (journals.length === 0) {
     return (
       <div className="glass-card text-center" style={{ padding: '3.5rem 1.5rem' }}>
@@ -78,9 +82,6 @@ export default function Dashboard({ journals = [], onQuickLogMood }) {
       </div>
     );
   }
-
-  // Use the custom hook for weather and mood calculations
-  const { avgMood, weather } = useWeatherWidget(journals);
 
   // Calculate statistics
   const total = journals.length;
